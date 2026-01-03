@@ -5260,3 +5260,1674 @@ export class UserProjectionHandler implements IEventHandler<UserCreatedEvent | U
 
 > অনুসরণ করুন [@gasangw](https://github.com/gasangw) | মূল Repository: [NestJS-Interview-Questions-And-Answers](https://github.com/gasangw/NestJS-Interview-Questions-And-Answers)
 
+
+## ৭১. WebSockets এবং Gateways
+
+WebSockets দুই-দিকের real-time communication সক্রিয় করে।
+
+### ইনস্টলেশন:
+
+```bash
+npm install @nestjs/websockets @nestjs/platform-socket.io
+npm install socket.io
+```
+
+### Gateway তৈরি:
+
+```typescript
+import {
+	WebSocketGateway,
+	WebSocketServer,
+	SubscribeMessage,
+	MessageBody,
+	ConnectedSocket,
+	OnGatewayInit,
+	OnGatewayConnection,
+	OnGatewayDisconnect,
+} from "@nestjs/websockets";
+import { Server, Socket } from "socket.io";
+
+@WebSocketGateway({
+	cors: {
+		origin: "*",
+	},
+})
+export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+	@WebSocketServer()
+	server: Server;
+
+	afterInit(server: Server) {
+		console.log("WebSocket Gateway initialized");
+	}
+
+	handleConnection(client: Socket) {
+		console.log(`Client connected: ${client.id}`);
+	}
+
+	handleDisconnect(client: Socket) {
+		console.log(`Client disconnected: ${client.id}`);
+	}
+
+	@SubscribeMessage("message")
+	handleMessage(@MessageBody() data: string, @ConnectedSocket() client: Socket): string {
+		console.log(`Message from ${client.id}: ${data}`);
+		this.server.emit("message", data); // সবাইকে পাঠান
+		return "Message received"; // sender কে response
+	}
+
+	@SubscribeMessage("joinRoom")
+	handleJoinRoom(@MessageBody() room: string, @ConnectedSocket() client: Socket) {
+		client.join(room);
+		this.server.to(room).emit("userJoined", { userId: client.id });
+	}
+}
+```
+
+### Client-side (Browser):
+
+```javascript
+import io from "socket.io-client";
+
+const socket = io("http://localhost:3000");
+
+// সংযোগ হলে
+socket.on("connect", () => {
+	console.log("Connected:", socket.id);
+});
+
+// Message পাঠান
+socket.emit("message", "Hello Server!");
+
+// Message গ্রহণ করুন
+socket.on("message", (data) => {
+	console.log("Received:", data);
+});
+
+// Room join
+socket.emit("joinRoom", "room1");
+```
+
+### Room-based Communication:
+
+```typescript
+@WebSocketGateway()
+export class ChatGateway {
+	@WebSocketServer()
+	server: Server;
+
+	@SubscribeMessage("sendToRoom")
+	handleRoomMessage(@MessageBody() data: { room: string; message: string }) {
+		this.server.to(data.room).emit("message", data.message);
+	}
+
+	@SubscribeMessage("broadcast")
+	handleBroadcast(@MessageBody() message: string) {
+		this.server.emit("message", message); // সবাইকে
+	}
+
+	// নির্দিষ্ট client কে
+	sendToClient(clientId: string, event: string, data: any) {
+		this.server.to(clientId).emit(event, data);
+	}
+}
+```
+
+### Namespace ব্যবহার:
+
+```typescript
+@WebSocketGateway({ namespace: "/chat" })
+export class ChatGateway {
+	// ws://localhost:3000/chat
+}
+
+@WebSocketGateway({ namespace: "/admin" })
+export class AdminGateway {
+	// ws://localhost:3000/admin
+}
+```
+
+### Authentication সহ:
+
+```typescript
+import { UseGuards } from "@nestjs/common";
+
+@WebSocketGateway()
+export class ChatGateway {
+	@UseGuards(WsAuthGuard)
+	@SubscribeMessage("message")
+	handleMessage(@ConnectedSocket() client: Socket, @MessageBody() data: string) {
+		const user = client.data.user; // Guard থেকে
+		return `${user.name} says: ${data}`;
+	}
+}
+
+// WS Auth Guard
+@Injectable()
+export class WsAuthGuard implements CanActivate {
+	canActivate(context: ExecutionContext): boolean {
+		const client = context.switchToWs().getClient<Socket>();
+		const token = client.handshake.headers.authorization;
+
+		if (!token) {
+			throw new UnauthorizedException();
+		}
+
+		const user = this.validateToken(token);
+		client.data.user = user;
+		return true;
+	}
+
+	private validateToken(token: string) {
+		// JWT validation
+		return { id: 1, name: "User" };
+	}
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭২. Microservices - Redis, MQTT, NATS, RabbitMQ, gRPC
+
+### TCP Microservice:
+
+```typescript
+// main.ts (Microservice)
+import { NestFactory } from "@nestjs/core";
+import { Transport, MicroserviceOptions } from "@nestjs/microservices";
+
+async function bootstrap() {
+	const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+		transport: Transport.TCP,
+		options: {
+			host: "localhost",
+			port: 8877,
+		},
+	});
+	await app.listen();
+}
+bootstrap();
+```
+
+### Redis Microservice:
+
+```typescript
+// redis-microservice
+import { Transport } from "@nestjs/microservices";
+
+const app = await NestFactory.createMicroservice(AppModule, {
+	transport: Transport.REDIS,
+	options: {
+		host: "localhost",
+		port: 6379,
+	},
+});
+```
+
+### MQTT Microservice:
+
+```typescript
+import { Transport } from "@nestjs/microservices";
+
+const app = await NestFactory.createMicroservice(AppModule, {
+	transport: Transport.MQTT,
+	options: {
+		url: "mqtt://localhost:1883",
+	},
+});
+```
+
+### RabbitMQ Microservice:
+
+```bash
+npm install amqplib amqp-connection-manager
+```
+
+```typescript
+import { Transport } from "@nestjs/microservices";
+
+const app = await NestFactory.createMicroservice(AppModule, {
+	transport: Transport.RMQ,
+	options: {
+		urls: ["amqp://localhost:5672"],
+		queue: "cats_queue",
+		queueOptions: {
+			durable: false,
+		},
+	},
+});
+```
+
+### gRPC Microservice:
+
+```bash
+npm install @grpc/grpc-js @grpc/proto-loader
+```
+
+```typescript
+// main.ts
+import { Transport } from "@nestjs/microservices";
+import { join } from "path";
+
+const app = await NestFactory.createMicroservice(AppModule, {
+	transport: Transport.GRPC,
+	options: {
+		package: "hero",
+		protoPath: join(__dirname, "./hero.proto"),
+	},
+});
+```
+
+```proto
+// hero.proto
+syntax = "proto3";
+
+package hero;
+
+service HeroService {
+  rpc FindOne (HeroById) returns (Hero) {}
+}
+
+message HeroById {
+  int32 id = 1;
+}
+
+message Hero {
+  int32 id = 1;
+  string name = 2;
+}
+```
+
+### Message Patterns:
+
+```typescript
+import { Controller } from "@nestjs/common";
+import { MessagePattern, EventPattern } from "@nestjs/microservices";
+
+@Controller()
+export class MathController {
+	@MessagePattern({ cmd: "sum" }) // Request-response
+	accumulate(data: number[]): number {
+		return data.reduce((a, b) => a + b);
+	}
+
+	@EventPattern("user_created") // Event-based
+	async handleUserCreated(data: Record<string, unknown>) {
+		console.log("User created:", data);
+	}
+}
+```
+
+### Client থেকে Microservice Call:
+
+```typescript
+import { Injectable } from "@nestjs/common";
+import { ClientProxy, ClientProxyFactory, Transport } from "@nestjs/microservices";
+
+@Injectable()
+export class AppService {
+	private client: ClientProxy;
+
+	constructor() {
+		this.client = ClientProxyFactory.create({
+			transport: Transport.TCP,
+			options: {
+				host: "localhost",
+				port: 8877,
+			},
+		});
+	}
+
+	async callMicroservice() {
+		const pattern = { cmd: "sum" };
+		const data = [1, 2, 3, 4, 5];
+
+		return this.client.send(pattern, data).toPromise();
+	}
+
+	emitEvent() {
+		this.client.emit("user_created", { id: 1, name: "John" });
+	}
+}
+```
+
+### Hybrid Application (HTTP + Microservice):
+
+```typescript
+// main.ts
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule);
+
+	// Microservice connection যোগ করুন
+	app.connectMicroservice({
+		transport: Transport.TCP,
+		options: { port: 8877 },
+	});
+
+	await app.startAllMicroservices();
+	await app.listen(3000); // HTTP server
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৩. Custom Decorators তৈরি
+
+Custom decorators আপনার নিজস্ব logic encapsulate করতে দেয়।
+
+### Parameter Decorator:
+
+```typescript
+import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+
+export const User = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+	const request = ctx.switchToHttp().getRequest();
+	return request.user;
+});
+
+// ব্যবহার
+@Get("profile")
+getProfile(@User() user: UserEntity) {
+  return user;
+}
+```
+
+### Specific Data Extract:
+
+```typescript
+export const UserId = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+	const request = ctx.switchToHttp().getRequest();
+	return request.user?.id;
+});
+
+// ব্যবহার
+@Get("posts")
+getUserPosts(@UserId() userId: number) {
+  return this.postsService.findByUser(userId);
+}
+```
+
+### Data Passing to Decorator:
+
+```typescript
+export const User = createParamDecorator((data: string, ctx: ExecutionContext) => {
+	const request = ctx.switchToHttp().getRequest();
+	const user = request.user;
+
+	return data ? user?.[data] : user;
+});
+
+// ব্যবহার
+@Get()
+findAll(@User("email") userEmail: string) {
+  return `User email: ${userEmail}`;
+}
+```
+
+### Method Decorator (Roles):
+
+```typescript
+import { SetMetadata } from "@nestjs/common";
+
+export const ROLES_KEY = "roles";
+export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+
+// ব্যবহার
+@Post()
+@Roles("admin", "moderator")
+create(@Body() dto: CreateDto) {
+  return this.service.create(dto);
+}
+```
+
+### Combined Decorator:
+
+```typescript
+import { applyDecorators } from "@nestjs/common";
+
+export function Auth(...roles: string[]) {
+	return applyDecorators(
+		UseGuards(JwtAuthGuard, RolesGuard),
+		ApiBearerAuth(),
+		ApiUnauthorizedResponse({ description: "Unauthorized" }),
+		Roles(...roles),
+	);
+}
+
+// ব্যবহার
+@Post()
+@Auth("admin")
+create(@Body() dto: CreateDto) {
+  return this.service.create(dto);
+}
+```
+
+### Class Decorator:
+
+```typescript
+export function Controller(prefix: string): ClassDecorator {
+	return (target: Function) => {
+		Reflect.defineMetadata("path", prefix, target);
+	};
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৪. Validation Techniques (class-validator বিস্তারিত)
+
+### class-validator ইনস্টলেশন:
+
+```bash
+npm install class-validator class-transformer
+```
+
+### সব Validation Decorators:
+
+```typescript
+import {
+	IsString,
+	IsInt,
+	IsEmail,
+	IsNotEmpty,
+	IsOptional,
+	MinLength,
+	MaxLength,
+	Min,
+	Max,
+	IsArray,
+	IsEnum,
+	IsBoolean,
+	IsDate,
+	IsUrl,
+	IsUUID,
+	Matches,
+	IsPhoneNumber,
+	IsPostalCode,
+	IsCreditCard,
+	IsISO8601,
+	ArrayMinSize,
+	ArrayMaxSize,
+	ValidateNested,
+	IsNumber,
+	IsPositive,
+	IsNegative,
+	IsDivisibleBy,
+} from "class-validator";
+import { Type } from "class-transformer";
+
+export class CreateUserDto {
+	@IsNotEmpty({ message: "নাম খালি হতে পারবে না" })
+	@IsString()
+	@MinLength(2, { message: "নাম কমপক্ষে 2 অক্ষরের হতে হবে" })
+	@MaxLength(50)
+	name: string;
+
+	@IsEmail({}, { message: "বৈধ ইমেইল দিন" })
+	email: string;
+
+	@IsInt()
+	@Min(18, { message: "বয়স কমপক্ষে 18 হতে হবে" })
+	@Max(100)
+	age: number;
+
+	@IsOptional() // Optional field
+	@IsString()
+	bio?: string;
+
+	@IsArray()
+	@ArrayMinSize(1)
+	@IsString({ each: true })
+	tags: string[];
+
+	@IsEnum(["admin", "user", "guest"])
+	role: string;
+
+	@IsBoolean()
+	isActive: boolean;
+
+	@IsDate()
+	@Type(() => Date)
+	birthDate: Date;
+
+	@IsUrl()
+	website: string;
+
+	@IsUUID()
+	referralCode: string;
+
+	@Matches(/^[A-Z0-9]*$/, { message: "শুধুমাত্র uppercase letters এবং numbers" })
+	code: string;
+
+	@IsPhoneNumber("BD")
+	phoneNumber: string;
+
+	@IsPostalCode("BD")
+	postalCode: string;
+
+	@IsCreditCard()
+	cardNumber: string;
+
+	@IsISO8601()
+	timestamp: string;
+}
+```
+
+### Nested Validation:
+
+```typescript
+class AddressDto {
+	@IsString()
+	street: string;
+
+	@IsString()
+	city: string;
+
+	@IsPostalCode("BD")
+	postalCode: string;
+}
+
+export class CreateUserDto {
+	@IsString()
+	name: string;
+
+	@ValidateNested()
+	@Type(() => AddressDto)
+	address: AddressDto;
+
+	@ValidateNested({ each: true })
+	@Type(() => AddressDto)
+	@IsArray()
+	addresses: AddressDto[];
+}
+```
+
+### Custom Validator:
+
+```typescript
+import { registerDecorator, ValidationOptions, ValidationArguments } from "class-validator";
+
+export function IsUserAlreadyExist(validationOptions?: ValidationOptions) {
+	return function (object: Object, propertyName: string) {
+		registerDecorator({
+			name: "isUserAlreadyExist",
+			target: object.constructor,
+			propertyName: propertyName,
+			options: validationOptions,
+			validator: {
+				async validate(value: any, args: ValidationArguments) {
+					// Database check
+					const userExists = await checkUserExists(value);
+					return !userExists;
+				},
+				defaultMessage(args: ValidationArguments) {
+					return "ইউজার ইতিমধ্যে বিদ্যমান";
+				},
+			},
+		});
+	};
+}
+
+// ব্যবহার
+export class CreateUserDto {
+	@IsEmail()
+	@IsUserAlreadyExist()
+	email: string;
+}
+```
+
+### Conditional Validation:
+
+```typescript
+import { ValidateIf } from "class-validator";
+
+export class CreateShipmentDto {
+	@IsString()
+	recipientName: string;
+
+	@ValidateIf((o) => o.shipmentType === "international")
+	@IsString()
+	customsDeclaration?: string;
+
+	@IsEnum(["domestic", "international"])
+	shipmentType: string;
+}
+```
+
+### ValidationPipe Configuration:
+
+```typescript
+app.useGlobalPipes(
+	new ValidationPipe({
+		whitelist: true, // Extra properties remove
+		forbidNonWhitelisted: true, // Extra properties থাকলে error
+		transform: true, // Auto type transformation
+		transformOptions: {
+			enableImplicitConversion: true,
+		},
+		disableErrorMessages: false, // Production এ true
+		validationError: {
+			target: false,
+			value: false,
+		},
+	}),
+);
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৫. Performance Optimization (Fastify)
+
+Fastify Express এর চেয়ে দ্রুত এবং কম memory ব্যবহার করে।
+
+### Fastify সেটআপ:
+
+```bash
+npm install @nestjs/platform-fastify
+```
+
+```typescript
+import { NestFactory } from "@nestjs/core";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
+import { AppModule } from "./app.module";
+
+async function bootstrap() {
+	const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+	await app.listen(3000, "0.0.0.0");
+}
+bootstrap();
+```
+
+### Fastify Plugins:
+
+```typescript
+import fastifyHelmet from "@fastify/helmet";
+import fastifyRateLimit from "@fastify/rate-limit";
+import fastifyCompress from "@fastify/compress";
+
+async function bootstrap() {
+	const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
+	await app.register(fastifyHelmet);
+	await app.register(fastifyRateLimit, {
+		max: 100,
+		timeWindow: "1 minute",
+	});
+	await app.register(fastifyCompress);
+
+	await app.listen(3000);
+}
+```
+
+### Response Serialization:
+
+```typescript
+import { Controller, Get } from "@nestjs/common";
+
+@Controller("users")
+export class UsersController {
+	@Get()
+	findAll() {
+		return {
+			data: [],
+			meta: { total: 0 },
+		};
+	}
+}
+```
+
+### Performance তুলনা:
+
+| Feature | Express | Fastify |
+|---------|---------|---------|
+| গতি | Medium | Fast (~2x) |
+| Memory | Higher | Lower |
+| Overhead | Higher | Lower |
+| Ecosystem | Mature | Growing |
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৬. Compression
+
+HTTP response compress করে bandwidth সাশ্রয় করে।
+
+### ইনস্টলেশন (Express):
+
+```bash
+npm install compression
+```
+
+```typescript
+import * as compression from "compression";
+
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule);
+	app.use(compression());
+	await app.listen(3000);
+}
+```
+
+### Fastify Compression:
+
+```typescript
+import fastifyCompress from "@fastify/compress";
+
+await app.register(fastifyCompress, {
+	encodings: ["gzip", "deflate"],
+});
+```
+
+### Selective Compression:
+
+```typescript
+app.use(
+	compression({
+		filter: (req, res) => {
+			if (req.headers["x-no-compression"]) {
+				return false;
+			}
+			return compression.filter(req, res);
+		},
+		threshold: 1024, // 1KB এর চেয়ে বড় হলে compress
+	}),
+);
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৭. HTTP Module এবং External API Calls
+
+### HttpModule ব্যবহার:
+
+```bash
+npm install @nestjs/axios axios
+```
+
+```typescript
+import { HttpModule } from "@nestjs/axios";
+
+@Module({
+	imports: [HttpModule],
+	providers: [ApiService],
+})
+export class ApiModule {}
+```
+
+### HTTP Service:
+
+```typescript
+import { Injectable } from "@nestjs/common";
+import { HttpService } from "@nestjs/axios";
+import { firstValueFrom } from "rxjs";
+import { map } from "rxjs/operators";
+
+@Injectable()
+export class ApiService {
+	constructor(private httpService: HttpService) {}
+
+	async getUsers(): Promise<any> {
+		const { data } = await firstValueFrom(this.httpService.get("https://jsonplaceholder.typicode.com/users"));
+		return data;
+	}
+
+	async createUser(userData: any): Promise<any> {
+		return firstValueFrom(
+			this.httpService
+				.post("https://api.example.com/users", userData, {
+					headers: {
+						Authorization: "Bearer token",
+					},
+				})
+				.pipe(map((response) => response.data)),
+		);
+	}
+}
+```
+
+### Retry Logic:
+
+```typescript
+import { retry, catchError } from "rxjs/operators";
+import { throwError } from "rxjs";
+
+async getUsersWithRetry(): Promise<any> {
+  return firstValueFrom(
+    this.httpService.get('https://api.example.com/users').pipe(
+      retry(3), // 3 বার পুনরায় চেষ্টা
+      catchError(error => {
+        console.error('Error:', error);
+        return throwError(() => new Error('API call failed'));
+      })
+    )
+  );
+}
+```
+
+### Configuration:
+
+```typescript
+HttpModule.register({
+	timeout: 5000,
+	maxRedirects: 5,
+	headers: {
+		"User-Agent": "NestJS App",
+	},
+});
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৮. Model-View-Controller (MVC) Pattern
+
+NestJS MVC architecture সমর্থন করে template rendering এর জন্য।
+
+### Handlebars সেটআপ:
+
+```bash
+npm install hbs
+```
+
+```typescript
+import { NestFactory } from "@nestjs/core";
+import { NestExpressApplication } from "@nestjs/platform-express";
+import { join } from "path";
+
+async function bootstrap() {
+	const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+	app.useStaticAssets(join(__dirname, "..", "public"));
+	app.setBaseViewsDir(join(__dirname, "..", "views"));
+	app.setViewEngine("hbs");
+
+	await app.listen(3000);
+}
+bootstrap();
+```
+
+### Controller with Views:
+
+```typescript
+import { Controller, Get, Render } from "@nestjs/common";
+
+@Controller()
+export class AppController {
+	@Get()
+	@Render("index")
+	root() {
+		return { message: "Hello world!", title: "NestJS MVC" };
+	}
+
+	@Get("users")
+	@Render("users")
+	async getUsers() {
+		const users = await this.usersService.findAll();
+		return { users };
+	}
+}
+```
+
+### Template (views/index.hbs):
+
+```handlebars
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <h1>{{message}}</h1>
+</body>
+</html>
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৭৯. Hot Reload (Webpack HMR)
+
+Development এ fast iteration এর জন্য Hot Module Replacement।
+
+### Webpack HMR সেটআপ:
+
+```bash
+npm install webpack-node-externals run-script-webpack-plugin webpack
+```
+
+### webpack.config.js:
+
+```javascript
+const webpack = require("webpack");
+const nodeExternals = require("webpack-node-externals");
+const { RunScriptWebpackPlugin } = require("run-script-webpack-plugin");
+
+module.exports = function (options, webpack) {
+	return {
+		...options,
+		entry: ["webpack/hot/poll?100", options.entry],
+		externals: [
+			nodeExternals({
+				allowlist: ["webpack/hot/poll?100"],
+			}),
+		],
+		plugins: [
+			...options.plugins,
+			new webpack.HotModuleReplacementPlugin(),
+			new webpack.WatchIgnorePlugin({
+				paths: [/\.js$/, /\.d\.ts$/],
+			}),
+			new RunScriptWebpackPlugin({ name: options.output.filename, autoRestart: false }),
+		],
+	};
+};
+```
+
+### main.ts এ HMR:
+
+```typescript
+declare const module: any;
+
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule);
+	await app.listen(3000);
+
+	if (module.hot) {
+		module.hot.accept();
+		module.hot.dispose(() => app.close());
+	}
+}
+bootstrap();
+```
+
+### package.json scripts:
+
+```json
+{
+	"scripts": {
+		"start:dev": "nest build --webpack --webpackPath webpack.config.js --watch"
+	}
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮০. Platform Agnosticism
+
+NestJS বিভিন্ন HTTP platform এ চলতে পারে।
+
+### Express (ডিফল্ট):
+
+```typescript
+import { NestFactory } from "@nestjs/core";
+
+const app = await NestFactory.create(AppModule);
+```
+
+### Fastify:
+
+```typescript
+import { FastifyAdapter } from "@nestjs/platform-fastify";
+
+const app = await NestFactory.create(AppModule, new FastifyAdapter());
+```
+
+### Platform-specific Code:
+
+```typescript
+import { Controller, Get, Req, Res } from "@nestjs/common";
+import { Request, Response } from "express";
+
+@Controller()
+export class AppController {
+	// Express specific
+	@Get("express")
+	getExpress(@Req() req: Request, @Res() res: Response) {
+		res.send("Express");
+	}
+}
+```
+
+### Platform-agnostic Code (প্রস্তাবিত):
+
+```typescript
+@Controller()
+export class AppController {
+	@Get()
+	getData() {
+		return { message: "Platform independent" };
+	}
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## অতিরিক্ত বিষয়সমূহ
+
+## ৮১. Lifecycle Events
+
+NestJS বিভিন্ন lifecycle hooks প্রদান করে:
+
+```typescript
+import { Injectable, OnModuleInit, OnModuleDestroy, OnApplicationBootstrap, OnApplicationShutdown } from "@nestjs/common";
+
+@Injectable()
+export class UsersService implements OnModuleInit, OnModuleDestroy, OnApplicationBootstrap, OnApplicationShutdown {
+	onModuleInit() {
+		console.log("Module initialized");
+	}
+
+	onApplicationBootstrap() {
+		console.log("Application bootstrap complete");
+	}
+
+	onModuleDestroy() {
+		console.log("Module destroyed");
+	}
+
+	async onApplicationShutdown(signal?: string) {
+		console.log(`Application shutting down (${signal})`);
+		// Cleanup logic
+	}
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮২. Testing Strategies (Unit & E2E)
+
+### Unit Testing:
+
+```typescript
+import { Test, TestingModule } from "@nestjs/testing";
+import { UsersService } from "./users.service";
+
+describe("UsersService", () => {
+	let service: UsersService;
+	let mockRepository: any;
+
+	beforeEach(async () => {
+		mockRepository = {
+			find: jest.fn(),
+			findOne: jest.fn(),
+			save: jest.fn(),
+		};
+
+		const module: TestingModule = await Test.createTestingModule({
+			providers: [
+				UsersService,
+				{
+					provide: "UserRepository",
+					useValue: mockRepository,
+				},
+			],
+		}).compile();
+
+		service = module.get<UsersService>(UsersService);
+	});
+
+	it("should be defined", () => {
+		expect(service).toBeDefined();
+	});
+
+	it("should return all users", async () => {
+		const users = [{ id: 1, name: "Test" }];
+		mockRepository.find.mockResolvedValue(users);
+
+		const result = await service.findAll();
+
+		expect(result).toEqual(users);
+		expect(mockRepository.find).toHaveBeenCalled();
+	});
+});
+```
+
+### E2E Testing:
+
+```typescript
+import { Test, TestingModule } from "@nestjs/testing";
+import { INestApplication } from "@nestjs/common";
+import * as request from "supertest";
+import { AppModule } from "./../src/app.module";
+
+describe("AppController (e2e)", () => {
+	let app: INestApplication;
+
+	beforeEach(async () => {
+		const moduleFixture: TestingModule = await Test.createTestingModule({
+			imports: [AppModule],
+		}).compile();
+
+		app = moduleFixture.createNestApplication();
+		await app.init();
+	});
+
+	it("/ (GET)", () => {
+		return request(app.getHttpServer()).get("/").expect(200).expect("Hello World!");
+	});
+
+	it("/users (POST)", () => {
+		return request(app.getHttpServer())
+			.post("/users")
+			.send({ name: "Test", email: "test@example.com" })
+			.expect(201)
+			.expect((res) => {
+				expect(res.body).toHaveProperty("id");
+			});
+	});
+
+	afterAll(async () => {
+		await app.close();
+	});
+});
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮৩. CLI Usage এবং Generators
+
+### NestJS CLI Commands:
+
+```bash
+# নতুন application
+nest new my-app
+
+# Generate resources
+nest generate controller users
+nest generate service users
+nest generate module users
+nest generate guard auth
+nest generate interceptor logging
+nest generate pipe validation
+nest generate filter http-exception
+nest generate middleware logger
+nest generate decorator current-user
+
+# Resource তৈরি (সব একসাথে)
+nest generate resource users
+
+# Shorthand
+nest g co users
+nest g s users
+nest g mo users
+
+# Dry run (preview)
+nest g s users --dry-run
+
+# Skip tests
+nest g s users --no-spec
+
+# Flat structure
+nest g s users --flat
+
+# Specific path
+nest g s users --path src/modules/users
+```
+
+### Project Information:
+
+```bash
+nest info
+
+# Output:
+# [System Information]
+# OS Version     : macOS
+# NodeJS Version : v18.0.0
+# NPM Version    : 8.0.0
+# [Nest CLI]
+# Nest CLI Version : 9.0.0
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮৪. Global Path Prefix
+
+সব routes এর জন্য common prefix।
+
+```typescript
+async function bootstrap() {
+	const app = await NestFactory.create(AppModule);
+
+	app.setGlobalPrefix("api/v1");
+	// এখন সব routes: /api/v1/users, /api/v1/posts, etc.
+
+	// নির্দিষ্ট routes বাদ দিতে
+	app.setGlobalPrefix("api/v1", {
+		exclude: ["health", "metrics"],
+	});
+
+	await app.listen(3000);
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮৫. HTTPS এবং Multiple Servers
+
+### HTTPS সেটআপ:
+
+```typescript
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import * as fs from "fs";
+
+async function bootstrap() {
+	const httpsOptions = {
+		key: fs.readFileSync("./secrets/private-key.pem"),
+		cert: fs.readFileSync("./secrets/public-certificate.pem"),
+	};
+
+	const app = await NestFactory.create(AppModule, {
+		httpsOptions,
+	});
+
+	await app.listen(443);
+}
+bootstrap();
+```
+
+### HTTP এবং HTTPS একসাথে:
+
+```typescript
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import * as fs from "fs";
+import * as http from "http";
+import * as https from "https";
+import { ExpressAdapter } from "@nestjs/platform-express";
+import * as express from "express";
+
+async function bootstrap() {
+	const server = express();
+	const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+
+	await app.init();
+
+	// HTTP server
+	http.createServer(server).listen(3000);
+
+	// HTTPS server
+	https
+		.createServer(
+			{
+				key: fs.readFileSync("./secrets/private-key.pem"),
+				cert: fs.readFileSync("./secrets/certificate.pem"),
+			},
+			server,
+		)
+		.listen(443);
+
+	console.log("HTTP: 3000, HTTPS: 443");
+}
+bootstrap();
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮৬. Logger Advanced Usage
+
+### Custom Logger:
+
+```typescript
+import { LoggerService } from "@nestjs/common";
+
+export class MyLogger implements LoggerService {
+	log(message: string) {
+		console.log(`[LOG] ${message}`);
+	}
+
+	error(message: string, trace: string) {
+		console.error(`[ERROR] ${message}`, trace);
+	}
+
+	warn(message: string) {
+		console.warn(`[WARN] ${message}`);
+	}
+
+	debug(message: string) {
+		console.debug(`[DEBUG] ${message}`);
+	}
+
+	verbose(message: string) {
+		console.log(`[VERBOSE] ${message}`);
+	}
+}
+
+// ব্যবহার
+const app = await NestFactory.create(AppModule, {
+	logger: new MyLogger(),
+});
+```
+
+### Winston Logger Integration:
+
+```bash
+npm install nest-winston winston
+```
+
+```typescript
+import { WinstonModule } from "nest-winston";
+import * as winston from "winston";
+
+@Module({
+	imports: [
+		WinstonModule.forRoot({
+			transports: [
+				new winston.transports.Console({
+					format: winston.format.combine(winston.format.timestamp(), winston.format.colorize(), winston.format.printf(({ timestamp, level, message }) => {
+						return `${timestamp} [${level}]: ${message}`;
+					})),
+				}),
+				new winston.transports.File({
+					filename: "logs/error.log",
+					level: "error",
+				}),
+				new winston.transports.File({
+					filename: "logs/combined.log",
+				}),
+			],
+		}),
+	],
+})
+export class AppModule {}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮৭. Health Checks
+
+Application health monitoring এর জন্য।
+
+```bash
+npm install @nestjs/terminus
+```
+
+```typescript
+import { Controller, Get } from "@nestjs/common";
+import { HealthCheck, HealthCheckService, HttpHealthIndicator, TypeOrmHealthIndicator } from "@nestjs/terminus";
+
+@Controller("health")
+export class HealthController {
+	constructor(
+		private health: HealthCheckService,
+		private http: HttpHealthIndicator,
+		private db: TypeOrmHealthIndicator,
+	) {}
+
+	@Get()
+	@HealthCheck()
+	check() {
+		return this.health.check([
+			() => this.http.pingCheck("nestjs-docs", "https://docs.nestjs.com"),
+			() => this.db.pingCheck("database"),
+		]);
+	}
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+## ৮৮. Queue এবং Background Jobs (Bull)
+
+```bash
+npm install @nestjs/bull bull
+npm install @types/bull
+```
+
+```typescript
+import { BullModule } from "@nestjs/bull";
+
+@Module({
+	imports: [
+		BullModule.forRoot({
+			redis: {
+				host: "localhost",
+				port: 6379,
+			},
+		}),
+		BullModule.registerQueue({
+			name: "emails",
+		}),
+	],
+})
+export class AppModule {}
+```
+
+### Producer:
+
+```typescript
+import { Injectable } from "@nestjs/common";
+import { InjectQueue } from "@nestjs/bull";
+import { Queue } from "bull";
+
+@Injectable()
+export class EmailService {
+	constructor(@InjectQueue("emails") private emailQueue: Queue) {}
+
+	async sendWelcomeEmail(email: string) {
+		await this.emailQueue.add(
+			"welcome",
+			{
+				email,
+				subject: "Welcome!",
+			},
+			{
+				delay: 5000, // 5 seconds delay
+				attempts: 3, // retry 3 times
+			},
+		);
+	}
+}
+```
+
+### Consumer:
+
+```typescript
+import { Processor, Process } from "@nestjs/bull";
+import { Job } from "bull";
+
+@Processor("emails")
+export class EmailProcessor {
+	@Process("welcome")
+	async handleWelcomeEmail(job: Job) {
+		console.log("Sending email to:", job.data.email);
+		// Email পাঠানোর logic
+		await this.sendEmail(job.data);
+		return { sent: true };
+	}
+
+	@Process()
+	async handleAllJobs(job: Job) {
+		console.log("Processing job:", job.name);
+	}
+
+	private async sendEmail(data: any) {
+		// Implementation
+	}
+}
+```
+
+**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+
+---
+
+## 📚 সম্পূর্ণ Topics কভার তালিকা
+
+### ✅ Overview
+- [x] First steps
+- [x] Controllers  
+- [x] Providers
+- [x] Modules
+- [x] Middleware
+- [x] Exception filters
+- [x] Pipes
+- [x] Guards
+- [x] Interceptors
+- [x] Custom decorators
+
+### ✅ Fundamentals
+- [x] Custom providers (useClass, useValue, useFactory, useExisting)
+- [x] Asynchronous providers
+- [x] Circular dependency
+- [x] Platform agnosticism
+- [x] Testing
+
+### ✅ Techniques
+- [x] Authentication (JWT, Passport, OAuth)
+- [x] Database (TypeORM, Mongoose, Prisma)
+- [x] Mongo
+- [x] File upload (Multer, S3)
+- [x] Validation (class-validator)
+- [x] Caching (Redis)
+- [x] Serialization
+- [x] Logger (Custom, Winston)
+- [x] Security (Helmet, CSRF, Rate Limiting)
+- [x] Configuration (Environment Variables)
+- [x] Compression
+- [x] HTTP module
+- [x] Model-View-Controller
+- [x] Performance (Fastify)
+- [x] Hot reload (Webpack)
+
+### ✅ GraphQL
+- [x] Quick start
+- [x] Resolvers
+- [x] Mutations
+- [x] Subscriptions
+- [x] Scalars
+- [x] Tooling
+
+### ✅ WebSockets
+- [x] Gateways
+- [x] Exception filters
+- [x] Pipes
+- [x] Guards
+- [x] Interceptors
+- [x] Adapters
+
+### ✅ Microservices
+- [x] Basics
+- [x] Redis
+- [x] MQTT
+- [x] NATS
+- [x] RabbitMQ
+- [x] gRPC
+- [x] Exception filters
+- [x] Pipes
+- [x] Guards
+- [x] Interceptors
+
+### ✅ Execution Context
+- [x] বিস্তারিত ব্যবহার
+
+### ✅ Recipes
+- [x] TypeORM (Migrations, Transactions, Soft Delete)
+- [x] Mongoose
+- [x] Sequelize
+- [x] CQRS
+- [x] OpenAPI (Swagger)
+- [x] Prisma
+
+### ✅ CLI
+- [x] Overview
+- [x] Usage
+- [x] Generators
+
+### ✅ FAQ
+- [x] Express instance
+- [x] Global path prefix
+- [x] Lifecycle events
+- [x] Hybrid application
+- [x] HTTPS & multiple servers
+- [x] Examples
+
+### ✅ Advanced Patterns (8+ Years)
+- [x] Multi-tenancy
+- [x] Event Sourcing
+- [x] CQRS
+- [x] Dynamic Modules
+- [x] Scoped Providers
+- [x] Hierarchical Injector
+- [x] Optional Providers
+- [x] Property vs Constructor Injection
+
+### ✅ Performance & Optimization
+- [x] Caching strategies
+- [x] Task scheduling
+- [x] Queue (Bull)
+- [x] Compression
+- [x] Health checks
+
+---
+
+## 🎯 সর্বমোট Content:
+
+- **প্রশ্ন সংখ্যা:** 88+
+- **লাইন সংখ্যা:** 5,262+
+- **কোড উদাহরণ:** 200+
+- **Topics কভার:** সব NestJS v5 documentation
+- **অভিজ্ঞতা লেভেল:** Beginner থেকে 8+ years Expert
+- **ভাষা:** সম্পূর্ণ বাংলা
+
+---
+
+## 📖 Reference Links
+
+### Official Documentation:
+- [NestJS Official Docs](https://docs.nestjs.com)
+- [NestJS v5 Docs](https://docs.nestjs.com/v5/)
+- [TypeORM](https://typeorm.io)
+- [Mongoose](https://mongoosejs.com)
+- [Prisma](https://www.prisma.io)
+- [Passport.js](http://www.passportjs.org/)
+
+### Community Resources:
+- [NestJS GitHub](https://github.com/nestjs/nest)
+- [NestJS Discord](https://discord.gg/nestjs)
+- [Original Repository](https://github.com/gasangw/NestJS-Interview-Questions-And-Answers)
+
+### Tools & Libraries:
+- [class-validator](https://github.com/typestack/class-validator)
+- [class-transformer](https://github.com/typestack/class-transformer)
+- [Socket.io](https://socket.io)
+- [Bull Queue](https://github.com/OptimalBits/bull)
+- [Jest](https://jestjs.io)
+
+---
+
+## 🙏 কৃতজ্ঞতা
+
+এই সম্পূর্ণ NestJS Interview Questions সংগ্রহটি তৈরিতে সহায়তার জন্য:
+- [@gasangw](https://github.com/gasangw) - মূল ইংরেজি repository এর জন্য
+- NestJS Community - Documentation এবং best practices এর জন্য
+- সব Contributors যারা open source community তে অবদান রাখেন
+
+---
+
+## 📝 সর্বশেষ আপডেট
+
+**Version:** 2.0  
+**Last Updated:** জানুয়ারি ৩, ২০২৬  
+**Total Questions:** 88+  
+**Status:** ✅ সম্পূর্ণ  
+
+**Changes:**
+- ✅ সব 70 মৌলিক প্রশ্ন যুক্ত
+- ✅ 18+ উন্নত বিষয় (৮ বছর+)
+- ✅ WebSockets, Microservices, GraphQL
+- ✅ Performance, Testing, CLI
+- ✅ সব NestJS v5 topics কভার
+- ✅ Real-world কোড উদাহরণ
+
+---
+
+**⭐ এই repository পছন্দ হলে Star দিন!**
+
+**🔗 Share করুন:** যদি এই resource উপকারী মনে হয়, অন্যদের সাথে share করুন।
+
+**💬 Feedback:** কোন প্রশ্ন বা পরামর্শ থাকলে issue তৈরি করুন।
+
+---
+
+**© 2026 NestJS Interview Questions - Complete Bangla Version**
+
+> Follow [@gasangw](https://github.com/gasangw) | [Original Repo](https://github.com/gasangw/NestJS-Interview-Questions-And-Answers)
+
+**সফল ইন্টারভিউর জন্য শুভকামনা! 🚀**
+
