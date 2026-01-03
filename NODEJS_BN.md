@@ -1,78 +1,53 @@
-# Node.js Advanced Interview Questions (৮+ বছরের অভিজ্ঞতার জন্য)
-
+﻿# Node.js Advanced Interview Questions (৮+ বছরের অভিজ্ঞতার জন্য)
 > Node.js ইন্টারভিউ প্রশ্ন এবং উত্তর - বাংলা সংস্করণ
 
----
-
+-----
 ## সূচিপত্র
-
 ### Core Concepts
-
 1. [Event Loop এবং Non-blocking I/O](#1-event-loop-এবং-non-blocking-io)
-2. [V8 Engine এবং Memory Management](#2-v8-engine-এবং-memory-management)
-3. [Process এবং Child Processes](#3-process-এবং-child-processes)
-4. [Cluster Mode এবং Scalability](#4-cluster-mode-এবং-scalability)
-5. [Stream API বিস্তারিত](#5-stream-api-বিস্তারিত)
-
+1. [V8 Engine এবং Memory Management](#2-v8-engine-এবং-memory-management)
+1. [Process এবং Child Processes](#3-process-এবং-child-processes)
+1. [Cluster Mode এবং Scalability](#4-cluster-mode-এবং-scalability)
+1. [Stream API বিস্তারিত](#5-stream-api-বিস্তারিত)
 ### Advanced Topics
-
 1. [Worker Threads](#6-worker-threads)
-2. [Buffer এবং Binary Data](#7-buffer-এবং-binary-data)
-3. [Crypto এবং Security](#8-crypto-এবং-security)
-4. [Performance Hooks](#9-performance-hooks)
-5. [Async Hooks](#10-async-hooks)
-
+1. [Buffer এবং Binary Data](#7-buffer-এবং-binary-data)
+1. [Crypto এবং Security](#8-crypto-এবং-security)
+1. [Performance Hooks](#9-performance-hooks)
+1. [Async Hooks](#10-async-hooks)
 ### Module System
-
 1. [CommonJS vs ES Modules](#11-commonjs-vs-es-modules)
-2. [Module Resolution](#12-module-resolution)
-3. [TypeScript Integration](#13-typescript-integration)
-
+1. [Module Resolution](#12-module-resolution)
+1. [TypeScript Integration](#13-typescript-integration)
 ### Networking
-
 1. [HTTP/HTTPS Server](#14-httphttps-server)
-2. [HTTP/2 Implementation](#15-http2-implementation)
-3. [WebSocket এবং Real-time Communication](#16-websocket-এবং-real-time-communication)
-4. [TCP/UDP Networking](#17-tcpudp-networking)
-
+1. [HTTP/2 Implementation](#15-http2-implementation)
+1. [WebSocket এবং Real-time Communication](#16-websocket-এবং-real-time-communication)
+1. [TCP/UDP Networking](#17-tcpudp-networking)
 ### Database & Storage
-
 1. [SQLite Integration](#18-sqlite-integration)
-2. [File System Advanced](#19-file-system-advanced)
-3. [Database Connection Pooling](#20-database-connection-pooling)
-
+1. [File System Advanced](#19-file-system-advanced)
+1. [Database Connection Pooling](#20-database-connection-pooling)
 ### Testing & Debugging
-
 1. [Test Runner](#21-test-runner)
-2. [Debugger এবং Inspector](#22-debugger-এবং-inspector)
-3. [Performance Profiling](#23-performance-profiling)
-
+1. [Debugger এবং Inspector](#22-debugger-এবং-inspector)
+1. [Performance Profiling](#23-performance-profiling)
 ### Production & Deployment
-
 1. [Environment Variables](#24-environment-variables)
-2. [Error Handling Strategies](#25-error-handling-strategies)
-3. [Monitoring এবং Logging](#26-monitoring-এবং-logging)
-4. [Security Best Practices](#27-security-best-practices)
-
+1. [Error Handling Strategies](#25-error-handling-strategies)
+1. [Monitoring এবং Logging](#26-monitoring-এবং-logging)
+1. [Security Best Practices](#27-security-best-practices)
 ### Advanced Features
-
 1. [Single Executable Applications](#28-single-executable-applications)
-2. [WASI (WebAssembly System Interface)](#29-wasi-webassembly-system-interface)
-3. [Web Crypto API](#30-web-crypto-api)
-
----
-
+1. [WASI (WebAssembly System Interface)](#29-wasi-webassembly-system-interface)
+1. [Web Crypto API](#30-web-crypto-api)
+-----
 ## উত্তর
-
-## 1. Event Loop এবং Non-blocking I/O
-
+## 1\. Event Loop এবং Non-blocking I/O
 ### Event Loop কি এবং এটি কিভাবে কাজ করে?
-
 Event Loop হল Node.js এর হৃদয় যা asynchronous operations পরিচালনা করে।
-
 ### Event Loop Phases
-
-```javascript
+~~~ javascript
 // Event Loop এর 6টি phase:
 // 1. Timers - setTimeout, setInterval
 // 2. Pending Callbacks - I/O callbacks
@@ -108,11 +83,9 @@ console.log("6. End");
 // 5. Promise
 // 2. setTimeout
 // 3. setImmediate
-```
-
+~~~
 ### Microtasks vs Macrotasks
-
-```javascript
+~~~ javascript
 // Microtasks (higher priority)
 process.nextTick(() => console.log("nextTick"));
 Promise.resolve().then(() => console.log("Promise"));
@@ -122,11 +95,9 @@ queueMicrotask(() => console.log("queueMicrotask"));
 setTimeout(() => console.log("setTimeout"), 0);
 setImmediate(() => console.log("setImmediate"));
 setInterval(() => console.log("setInterval"), 100);
-```
-
+~~~
 ### Event Loop Blocking
-
-```javascript
+~~~ javascript
 // খারাপ - Event Loop block করে
 function blockingOperation() {
 	const start = Date.now();
@@ -142,11 +113,9 @@ async function nonBlockingOperation() {
 
 // CPU-intensive কাজের জন্য Worker Threads ব্যবহার করুন
 const { Worker } = require("worker_threads");
-```
-
+~~~
 ### Event Loop Monitoring
-
-```javascript
+~~~ javascript
 const { performance } = require("perf_hooks");
 
 const obs = new PerformanceObserver((items) => {
@@ -164,17 +133,14 @@ setInterval(() => {
 		performance.measure("loop", "loop-start", "loop-end");
 	});
 }, 1000);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 2. V8 Engine এবং Memory Management
-
+-----
+## 2\. V8 Engine এবং Memory Management
 ### Heap Memory এবং Garbage Collection
-
-```javascript
+~~~ javascript
 // Memory usage চেক করুন
 const used = process.memoryUsage();
 console.log({
@@ -184,11 +150,9 @@ console.log({
 	external: `${Math.round(used.external / 1024 / 1024)} MB`,
 	arrayBuffers: `${Math.round(used.arrayBuffers / 1024 / 1024)} MB`,
 });
-```
-
+~~~
 ### Memory Leaks এড়ানো
-
-```javascript
+~~~ javascript
 // খারাপ - Memory leak
 const users = [];
 function addUser(user) {
@@ -229,11 +193,9 @@ class LRUCache {
 		return value;
 	}
 }
-```
-
+~~~
 ### V8 Flags এবং Optimization
-
-```bash
+~~~ bash
 # Heap size বৃদ্ধি করুন
 node --max-old-space-size=4096 app.js
 
@@ -246,11 +208,9 @@ node --trace-deopt app.js
 
 # Stack size বৃদ্ধি
 node --stack-size=2000 app.js
-```
-
+~~~
 ### V8 Heap Snapshot
-
-```javascript
+~~~ javascript
 const v8 = require("v8");
 const fs = require("fs");
 
@@ -269,17 +229,14 @@ console.log("Heap Stats:", {
 // Serialization
 const buffer = v8.serialize({ name: "John", age: 30 });
 const obj = v8.deserialize(buffer);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 3. Process এবং Child Processes
-
+-----
+## 3\. Process এবং Child Processes
 ### Process Object
-
-```javascript
+~~~ javascript
 // Process information
 console.log("Process ID:", process.pid);
 console.log("Parent Process ID:", process.ppid);
@@ -298,11 +255,9 @@ console.log("Exec Arguments:", process.execArgv);
 
 // Environment variables
 console.log("NODE_ENV:", process.env.NODE_ENV);
-```
-
+~~~
 ### Process Events
-
-```javascript
+~~~ javascript
 // Uncaught Exception
 process.on("uncaughtException", (error, origin) => {
 	console.error("Uncaught Exception:", error);
@@ -344,11 +299,9 @@ process.on("SIGINT", () => {
 	console.log("SIGINT received");
 	process.exit(0);
 });
-```
-
+~~~
 ### Child Processes
-
-```javascript
+~~~ javascript
 const { spawn, exec, execFile, fork } = require("child_process");
 
 // 1. spawn - Stream-based
@@ -400,11 +353,9 @@ process.on("message", (msg) => {
 
 	process.send({ result });
 });
-```
-
+~~~
 ### Advanced Child Process Patterns
-
-```javascript
+~~~ javascript
 const { spawn } = require("child_process");
 
 // Process pool
@@ -459,17 +410,14 @@ class ProcessPool {
 // ব্যবহার
 const pool = new ProcessPool(4);
 const result = await pool.execute({ cmd: "process", data: largeData });
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 4. Cluster Mode এবং Scalability
-
+-----
+## 4\. Cluster Mode এবং Scalability
 ### Cluster Module
-
-```javascript
+~~~ javascript
 const cluster = require("cluster");
 const http = require("http");
 const os = require("os");
@@ -506,11 +454,9 @@ if (cluster.isMaster) {
 	server.listen(8000);
 	console.log(`Worker ${process.pid} started`);
 }
-```
-
+~~~
 ### Load Balancing
-
-```javascript
+~~~ javascript
 const cluster = require("cluster");
 const express = require("express");
 
@@ -556,11 +502,9 @@ if (cluster.isMaster) {
 
 	app.listen(3000);
 }
-```
-
+~~~
 ### Zero-downtime Deployment
-
-```javascript
+~~~ javascript
 const cluster = require("cluster");
 
 if (cluster.isMaster) {
@@ -598,17 +542,14 @@ if (cluster.isMaster) {
 		restartWorkers();
 	});
 }
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 5. Stream API বিস্তারিত
-
+-----
+## 5\. Stream API বিস্তারিত
 ### Stream এর 4 প্রকার
-
-```javascript
+~~~ javascript
 const { Readable, Writable, Duplex, Transform } = require("stream");
 
 // 1. Readable Stream
@@ -675,11 +616,9 @@ class UpperCaseTransform extends Transform {
 
 const transform = new UpperCaseTransform();
 process.stdin.pipe(transform).pipe(process.stdout);
-```
-
+~~~
 ### File Streaming (Large Files)
-
-```javascript
+~~~ javascript
 const fs = require("fs");
 const { pipeline } = require("stream/promises");
 const zlib = require("zlib");
@@ -718,11 +657,9 @@ readable.on("data", (chunk) => {
 writable.on("drain", () => {
 	readable.resume(); // Resume reading
 });
-```
-
+~~~
 ### Advanced Transform Patterns
-
-```javascript
+~~~ javascript
 const { Transform } = require("stream");
 
 // CSV Parser Transform
@@ -768,11 +705,9 @@ class CSVParser extends Transform {
 
 // ব্যবহার
 fs.createReadStream("data.csv").pipe(new CSVParser()).pipe(process.stdout);
-```
-
+~~~
 ### Stream Error Handling
-
-```javascript
+~~~ javascript
 const { pipeline } = require("stream");
 
 pipeline(fs.createReadStream("input.txt"), transform, fs.createWriteStream("output.txt"), (err) => {
@@ -792,19 +727,15 @@ try {
 } catch (err) {
 	console.error("Failed:", err);
 }
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 6. Worker Threads
-
+-----
+## 6\. Worker Threads
 Worker Threads CPU-intensive কাজের জন্য multi-threading সক্ষম করে।
-
 ### Basic Worker Thread
-
-```javascript
+~~~ javascript
 // main.js
 const { Worker } = require("worker_threads");
 
@@ -840,11 +771,9 @@ function fibonacci(n) {
 
 const result = fibonacci(workerData.num);
 parentPort.postMessage(result);
-```
-
+~~~
 ### Worker Pool
-
-```javascript
+~~~ javascript
 const { Worker } = require("worker_threads");
 const os = require("os");
 
@@ -919,11 +848,9 @@ async function processTasks() {
 	console.log("All tasks completed");
 	pool.destroy();
 }
-```
-
+~~~
 ### SharedArrayBuffer এবং Atomics
-
-```javascript
+~~~ javascript
 // main.js
 const { Worker } = require("worker_threads");
 
@@ -957,17 +884,14 @@ Atomics.wait(sharedArray, 0, 0); // Wait for value change
 Atomics.notify(sharedArray, 0); // Notify waiting threads
 
 parentPort.postMessage("done");
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 7. Buffer এবং Binary Data
-
+-----
+## 7\. Buffer এবং Binary Data
 ### Buffer Operations
-
-```javascript
+~~~ javascript
 // Buffer তৈরি
 const buf1 = Buffer.alloc(10); // Zero-filled
 const buf2 = Buffer.allocUnsafe(10); // Uninitialized (faster)
@@ -999,11 +923,9 @@ console.log(Buffer.compare(buf1, buf3)); // -1 (buf1 < buf3)
 
 // Buffer concatenation
 const combined = Buffer.concat([buf1, buf2, buf3]);
-```
-
+~~~
 ### Binary Protocol Implementation
-
-```javascript
+~~~ javascript
 // Custom binary protocol
 class BinaryProtocol {
 	// Encode message
@@ -1035,11 +957,9 @@ class BinaryProtocol {
 const message = BinaryProtocol.encode(1, { user: "John", action: "login" });
 const decoded = BinaryProtocol.decode(message);
 console.log(decoded);
-```
-
+~~~
 ### File Buffer Operations
-
-```javascript
+~~~ javascript
 const fs = require("fs").promises;
 
 async function readBinaryFile(filename) {
@@ -1066,17 +986,14 @@ async function writeBinaryFile(filename, data) {
 
 	await fs.writeFile(filename, buffer);
 }
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 8. Crypto এবং Security
-
+-----
+## 8\. Crypto এবং Security
 ### Hashing
-
-```javascript
+~~~ javascript
 const crypto = require("crypto");
 
 // Password hashing (bcrypt style)
@@ -1118,11 +1035,9 @@ function verifyHMAC(data, secret, hmac) {
 	const calculated = createHMAC(data, secret);
 	return crypto.timingSafeEqual(Buffer.from(calculated), Buffer.from(hmac));
 }
-```
-
+~~~
 ### Encryption/Decryption
-
-```javascript
+~~~ javascript
 // AES-256-GCM Encryption
 function encrypt(text, key) {
 	const iv = crypto.randomBytes(16);
@@ -1185,11 +1100,9 @@ function rsaDecrypt(encrypted, privateKey) {
 		encrypted,
 	);
 }
-```
-
+~~~
 ### Digital Signatures
-
-```javascript
+~~~ javascript
 // Digital signature তৈরি
 function sign(data, privateKey) {
 	const sign = crypto.createSign("SHA256");
@@ -1211,11 +1124,9 @@ const message = "Important message";
 const signature = sign(message, privateKey);
 const isValid = verify(message, signature, publicKey);
 console.log("Signature valid:", isValid);
-```
-
+~~~
 ### JWT Implementation (from scratch)
-
-```javascript
+~~~ javascript
 const crypto = require("crypto");
 
 class JWT {
@@ -1281,17 +1192,14 @@ console.log("Token:", token);
 
 const decoded = JWT.decode(token, "secret-key");
 console.log("Decoded:", decoded);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 9. Performance Hooks
-
+-----
+## 9\. Performance Hooks
 ### Performance Measurement
-
-```javascript
+~~~ javascript
 const { performance, PerformanceObserver } = require("perf_hooks");
 
 // Basic measurement
@@ -1324,11 +1232,9 @@ async function slowFunction() {
 }
 
 performance.timerify(slowFunction)();
-```
-
+~~~
 ### HTTP Request Timing
-
-```javascript
+~~~ javascript
 const http = require("http");
 const { PerformanceObserver } = require("perf_hooks");
 
@@ -1346,11 +1252,9 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(3000);
-```
-
+~~~
 ### Custom Performance Metrics
-
-```javascript
+~~~ javascript
 class PerformanceTracker {
 	constructor() {
 		this.metrics = new Map();
@@ -1396,19 +1300,15 @@ await fetch("https://api.example.com");
 tracker.end("api-call");
 
 console.log("Metrics:", tracker.getMetrics());
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 10. Async Hooks
-
+-----
+## 10\. Async Hooks
 Async Hooks asynchronous operations track করতে দেয়।
-
 ### Basic Async Hooks
-
-```javascript
+~~~ javascript
 const async_hooks = require("async_hooks");
 const fs = require("fs");
 
@@ -1434,11 +1334,9 @@ asyncHook.enable();
 setTimeout(() => {
 	console.log("Timeout callback");
 }, 100);
-```
-
+~~~
 ### Request Context Tracking
-
-```javascript
+~~~ javascript
 const { AsyncLocalStorage } = require("async_hooks");
 const express = require("express");
 
@@ -1487,11 +1385,9 @@ app.use((req, res, next) => {
 	});
 	next();
 });
-```
-
+~~~
 ### Async Context Propagation
-
-```javascript
+~~~ javascript
 const { AsyncResource, executionAsyncId } = require("async_hooks");
 
 class AsyncTaskManager {
@@ -1535,17 +1431,14 @@ const manager = new AsyncTaskManager();
 const taskId = manager.scheduleTask(() => {
 	console.log("Task executed");
 });
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 11. CommonJS vs ES Modules
-
+-----
+## 11\. CommonJS vs ES Modules
 ### CommonJS (CJS)
-
-```javascript
+~~~ javascript
 // module.exports
 // math.js
 function add(a, b) {
@@ -1565,11 +1458,9 @@ exports.subtract = subtract;
 // require
 const math = require("./math");
 const { add } = require("./math");
-```
-
+~~~
 ### ES Modules (ESM)
-
-```javascript
+~~~ javascript
 // export
 // math.mjs
 export function add(a, b) {
@@ -1589,11 +1480,9 @@ export default class Calculator {
 // import
 import Calculator, { add, subtract } from "./math.mjs";
 import * as math from "./math.mjs";
-```
-
+~~~
 ### package.json Configuration
-
-```json
+~~~ json
 {
 	"type": "module",
 	"exports": {
@@ -1607,11 +1496,9 @@ import * as math from "./math.mjs";
 		}
 	}
 }
-```
-
+~~~
 ### Dynamic Import
-
-```javascript
+~~~ javascript
 // ESM এ dynamic import
 async function loadModule(moduleName) {
 	if (moduleName === "heavy") {
@@ -1631,11 +1518,9 @@ function loadModuleCJS(moduleName) {
 const isDevelopment = process.env.NODE_ENV === "development";
 
 const logger = isDevelopment ? await import("./dev-logger.mjs") : await import("./prod-logger.mjs");
-```
-
+~~~
 ### Interoperability
-
-```javascript
+~~~ javascript
 // ESM থেকে CJS import
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -1645,17 +1530,14 @@ const cjsModule = require("./cjs-module");
 (async () => {
 	const esmModule = await import("./esm-module.mjs");
 })();
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 12. Module Resolution
-
+-----
+## 12\. Module Resolution
 ### Module Search Algorithm
-
-```javascript
+~~~ javascript
 // require.resolve - module path খুঁজুন
 const path = require.resolve("express");
 console.log("Express path:", path);
@@ -1675,11 +1557,9 @@ function requireFresh(module) {
 	delete require.cache[require.resolve(module)];
 	return require(module);
 }
-```
-
+~~~
 ### Custom Module Loader
-
-```javascript
+~~~ javascript
 const Module = require("module");
 const path = require("path");
 
@@ -1715,17 +1595,14 @@ Module.prototype.require = function (id) {
 	}
 	return originalRequire.call(this, id);
 };
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 13. TypeScript Integration
-
+-----
+## 13\. TypeScript Integration
 ### tsconfig.json (Node.js)
-
-```json
+~~~ json
 {
 	"compilerOptions": {
 		"target": "ES2022",
@@ -1747,11 +1624,9 @@ Module.prototype.require = function (id) {
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]
 }
-```
-
+~~~
 ### Type-safe Node.js Code
-
-```typescript
+~~~ typescript
 import { EventEmitter } from "events";
 import { IncomingMessage, ServerResponse } from "http";
 import { Readable } from "stream";
@@ -1785,11 +1660,9 @@ userEmitter.on("user:created", (user) => {
 });
 
 userEmitter.emit("user:created", { id: "1", name: "John" });
-```
-
+~~~
 ### Typed HTTP Server
-
-```typescript
+~~~ typescript
 import * as http from "http";
 
 interface RequestHandler {
@@ -1855,11 +1728,9 @@ app.get("/users", async (req, res) => {
 });
 
 app.listen(3000);
-```
-
+~~~
 ### Advanced TypeScript Patterns
-
-```typescript
+~~~ typescript
 // Utility types for Node.js
 type AsyncFunction<T = void> = (...args: any[]) => Promise<T>;
 type Callback<T = void> = (err: Error | null, result?: T) => void;
@@ -1893,17 +1764,14 @@ declare global {
 // ব্যবহার
 const port = parseInt(process.env.PORT, 10);
 const isDev = process.env.NODE_ENV === "development";
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 14. HTTP/HTTPS Server
-
+-----
+## 14\. HTTP/HTTPS Server
 ### Advanced HTTP Server
-
-```javascript
+~~~ javascript
 const http = require("http");
 const url = require("url");
 
@@ -2001,11 +1869,9 @@ app.route("POST", "/api/data", async (req, res) => {
 });
 
 app.listen(3000, () => console.log("Server running on port 3000"));
-```
-
+~~~
 ### HTTPS Server with SSL
-
-```javascript
+~~~ javascript
 const https = require("https");
 const fs = require("fs");
 
@@ -2044,11 +1910,9 @@ const tlsOptions = {
 	ciphers: "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384",
 	honorCipherOrder: true,
 };
-```
-
+~~~
 ### Request/Response Utilities
-
-```javascript
+~~~ javascript
 // Request body parser
 async function parseBody(req, maxSize = 1048576) {
 	return new Promise((resolve, reject) => {
@@ -2127,11 +1991,9 @@ const server = http.createServer(async (req, res) => {
 		response.error(error.message, 400);
 	}
 });
-```
-
+~~~
 ### HTTP/2 Server Push
-
-```javascript
+~~~ javascript
 const http2 = require("http2");
 const fs = require("fs");
 
@@ -2163,17 +2025,14 @@ server.on("stream", (stream, headers) => {
 });
 
 server.listen(8443);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 15. HTTP/2 Implementation
-
+-----
+## 15\. HTTP/2 Implementation
 ### HTTP/2 Server
-
-```javascript
+~~~ javascript
 const http2 = require("http2");
 const fs = require("fs");
 
@@ -2207,11 +2066,9 @@ server.on("stream", (stream, headers) => {
 });
 
 server.listen(8443);
-```
-
+~~~
 ### HTTP/2 Client
-
-```javascript
+~~~ javascript
 const http2 = require("http2");
 
 const client = http2.connect("https://localhost:8443", {
@@ -2242,11 +2099,9 @@ req.on("end", () => {
 });
 
 req.end();
-```
-
+~~~
 ### Server Push Example
-
-```javascript
+~~~ javascript
 const http2 = require("http2");
 const fs = require("fs");
 const path = require("path");
@@ -2299,11 +2154,9 @@ server.on("stream", (stream, headers) => {
 server.listen(8443, () => {
 	console.log("HTTP/2 server with push running on https://localhost:8443");
 });
-```
-
+~~~
 ### Multiplexing Example
-
-```javascript
+~~~ javascript
 const http2 = require("http2");
 
 const client = http2.connect("https://example.com");
@@ -2334,17 +2187,14 @@ requests.forEach((path) => {
 setTimeout(() => {
 	client.close();
 }, 5000);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 16. WebSocket এবং Real-time Communication
-
+-----
+## 16\. WebSocket এবং Real-time Communication
 ### WebSocket Server (ws library)
-
-```javascript
+~~~ javascript
 const WebSocket = require("ws");
 const http = require("http");
 
@@ -2428,11 +2278,9 @@ server.listen(8080, () => {
 function generateId() {
 	return Math.random().toString(36).substr(2, 9);
 }
-```
-
+~~~
 ### Advanced WebSocket Patterns
-
-```javascript
+~~~ javascript
 class WebSocketManager {
 	constructor() {
 		this.wss = null;
@@ -2568,11 +2416,9 @@ const manager = new WebSocketManager();
 const server = http.createServer();
 manager.initialize(server);
 server.listen(8080);
-```
-
+~~~
 ### WebSocket Client
-
-```javascript
+~~~ javascript
 // Browser/Node.js WebSocket client
 class WebSocketClient {
 	constructor(url) {
@@ -2669,17 +2515,14 @@ client.on("message", (data) => {
 });
 
 client.connect();
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 17. TCP/UDP Networking
-
+-----
+## 17\. TCP/UDP Networking
 ### TCP Server
-
-```javascript
+~~~ javascript
 const net = require("net");
 
 // TCP Server
@@ -2725,11 +2568,9 @@ server.on("error", (err) => {
 server.listen(9000, () => {
 	console.log("TCP server listening on port 9000");
 });
-```
-
+~~~
 ### TCP Client
-
-```javascript
+~~~ javascript
 const net = require("net");
 
 const client = net.createConnection({ port: 9000, host: "localhost" }, () => {
@@ -2749,11 +2590,9 @@ client.on("end", () => {
 client.on("error", (err) => {
 	console.error("Connection error:", err);
 });
-```
-
+~~~
 ### Advanced TCP Protocol
-
-```javascript
+~~~ javascript
 // Custom protocol implementation
 class TCPProtocol {
 	constructor() {
@@ -2812,11 +2651,9 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(9000);
-```
-
+~~~
 ### UDP Server/Client
-
-```javascript
+~~~ javascript
 const dgram = require("dgram");
 
 // UDP Server
@@ -2860,11 +2697,9 @@ client.on("message", (msg, rinfo) => {
 	console.log(`Client got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 	client.close();
 });
-```
-
+~~~
 ### UDP Multicast
-
-```javascript
+~~~ javascript
 const dgram = require("dgram");
 
 // Multicast sender
@@ -2892,17 +2727,14 @@ receiver.on("listening", () => {
 });
 
 receiver.bind(PORT);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 18. SQLite Integration
-
+-----
+## 18\. SQLite Integration
 ### Basic SQLite Operations
-
-```javascript
+~~~ javascript
 const sqlite3 = require("sqlite3").verbose();
 const { promisify } = require("util");
 
@@ -3017,11 +2849,9 @@ async function transferBalance(fromId, toId, amount) {
 
 	await deleteUser(userId);
 })();
-```
-
+~~~
 ### Advanced SQLite Patterns
-
-```javascript
+~~~ javascript
 class Database {
 	constructor(filename) {
 		this.db = new sqlite3.Database(filename);
@@ -3195,17 +3025,14 @@ const userId = await userRepo.create({
 
 const user = await userRepo.findById(userId);
 console.log(user);
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 19. File System Advanced
-
+-----
+## 19\. File System Advanced
 ### Advanced File Operations
-
-```javascript
+~~~ javascript
 const fs = require("fs").promises;
 const path = require("path");
 const { createReadStream, createWriteStream } = require("fs");
@@ -3280,11 +3107,9 @@ async function findFiles(dir, pattern) {
 // ব্যবহার
 const jsFiles = await findFiles("./src", /\.js$/);
 console.log("JavaScript files:", jsFiles);
-```
-
+~~~
 ### File Watching
-
-```javascript
+~~~ javascript
 const fs = require("fs");
 const { EventEmitter } = require("events");
 
@@ -3339,11 +3164,9 @@ watcher.on("delete", (file) => {
 });
 
 watcher.watch();
-```
-
+~~~
 ### File Locking
-
-```javascript
+~~~ javascript
 const fs = require("fs").promises;
 const fsSync = require("fs");
 
@@ -3404,11 +3227,9 @@ await lock.withLock(async () => {
 	json.counter++;
 	await fs.writeFile("./data.json", JSON.stringify(json));
 });
-```
-
+~~~
 ### Memory-Mapped Files
-
-```javascript
+~~~ javascript
 const fs = require("fs");
 const mmap = require("mmap-io");
 
@@ -3436,17 +3257,14 @@ function processLargeFile(filename) {
 
 	return count;
 }
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 20. Database Connection Pooling
-
+-----
+## 20\. Database Connection Pooling
 ### MySQL Connection Pool
-
-```javascript
+~~~ javascript
 const mysql = require("mysql2/promise");
 
 // Connection pool configuration
@@ -3492,11 +3310,9 @@ await transaction(async (conn) => {
 	await conn.execute("UPDATE accounts SET balance = balance - ? WHERE id = ?", [100, 1]);
 	await conn.execute("UPDATE accounts SET balance = balance + ? WHERE id = ?", [100, 2]);
 });
-```
-
+~~~
 ### PostgreSQL Connection Pool
-
-```javascript
+~~~ javascript
 const { Pool } = require("pg");
 
 const pool = new Pool({
@@ -3565,11 +3381,9 @@ class UserRepository {
 		await query(queries.deleteUser, [id]);
 	}
 }
-```
-
+~~~
 ### Custom Connection Pool
-
-```javascript
+~~~ javascript
 class ConnectionPool {
 	constructor(factory, options = {}) {
 		this.factory = factory;
@@ -3718,17 +3532,14 @@ await pool.with(async (conn) => {
 });
 
 console.log("Pool stats:", pool.getStats());
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 21. Test Runner
-
+-----
+## 21\. Test Runner
 ### Native Node.js Test Runner (Node 18+)
-
-```javascript
+~~~ javascript
 const test = require("node:test");
 const assert = require("node:assert");
 
@@ -3794,11 +3605,9 @@ test("skip this test", { skip: true }, () => {
 test("slow test", { timeout: 5000 }, async () => {
 	await new Promise((resolve) => setTimeout(resolve, 4000));
 });
-```
-
+~~~
 ### Test Coverage
-
-```javascript
+~~~ javascript
 // test-utils.js
 class TestUtils {
 	static async assertThrows(fn, expectedError) {
@@ -3838,11 +3647,9 @@ test("error handling", async () => {
 		throw new Error("Expected error");
 	}, Error);
 });
-```
-
+~~~
 ### Mocking
-
-```javascript
+~~~ javascript
 const test = require("node:test");
 const assert = require("node:assert");
 const { mock } = require("node:test");
@@ -3901,11 +3708,9 @@ test("database operations", async () => {
 	assert.strictEqual(results.length, 1);
 	assert.strictEqual(db.getCalls().length, 1);
 });
-```
-
+~~~
 ### Integration Tests
-
-```javascript
+~~~ javascript
 const test = require("node:test");
 const assert = require("node:assert");
 const http = require("http");
@@ -3965,17 +3770,14 @@ test("HTTP server", async (t) => {
 		assert.strictEqual(json.message, "Hello");
 	});
 });
-```
+~~~
 
-**[⬆ সূচিপত্রে ফিরে যান](#সূচিপত্র)**
+[**⬆ সূচিপত্রে ফিরে যান**](#সূচিপত্র)
 
----
-
-## 22. Debugger এবং Inspector
-
+-----
+## 22\. Debugger এবং Inspector
 ### Built-in Debugger
-
-```javascript
+~~~ javascript
 // Start with: node inspect app.js
 
 function calculate(a, b) {
@@ -3996,11 +3798,9 @@ console.log(result);
 // pause - Pause running code
 // watch('expr') - Watch expression
 // setBreakpoint(), sb() - Set breakpoint
-```
-
+~~~
 ### Inspector Protocol
-
-```javascript
+~~~ javascript
 const inspector = require("inspector");
 const fs = require("fs");
 
@@ -4067,11 +3867,9 @@ async function collectCoverage(fn) {
 		});
 	});
 }
-```
-
+~~~
 ### Remote Debugging
-
-```javascript
+~~~ javascript
 // Start app with: node --inspect=0.0.0.0:9229 app.js
 
 const { promisify } = require("util");
@@ -4117,11 +3915,9 @@ async function debugRemote() {
 		console.log("Debug event:", message);
 	});
 }
-```
-
+~~~
 ### Debug Utilities
-
-```javascript
+~~~ javascript
 // Debug logging with namespaces
 const debug = require("debug");
 
@@ -4173,15 +3969,12 @@ debug.log("Processing request");
 debug.time("query");
 // ... do work
 debug.timeEnd("query");
-```
+~~~
 
----
-
-## 23. Performance Profiling
-
+-----
+## 23\. Performance Profiling
 ### CPU Profiling
-
-```javascript
+~~~ javascript
 const { Session } = require("inspector");
 const fs = require("fs");
 
@@ -4237,11 +4030,9 @@ await profiler.profile(async () => {
 });
 
 // View in Chrome DevTools: chrome://inspect
-```
-
+~~~
 ### Memory Profiling
-
-```javascript
+~~~ javascript
 const v8 = require("v8");
 const fs = require("fs");
 
@@ -4339,11 +4130,9 @@ const leakTest = await MemoryProfiler.detectMemoryLeak(async () => {
 });
 
 console.log("Leak test:", leakTest);
-```
-
+~~~
 ### Benchmarking
-
-```javascript
+~~~ javascript
 const { performance } = require("perf_hooks");
 
 class Benchmark {
@@ -4436,15 +4225,12 @@ async function benchmarkExample() {
 }
 
 benchmarkExample();
-```
+~~~
 
----
-
-## 24. Environment Variables
-
+-----
+## 24\. Environment Variables
 ### Environment Variables Management
-
-```javascript
+~~~ javascript
 // .env file
 /*
 NODE_ENV=production
@@ -4575,15 +4361,12 @@ try {
 	console.error("Configuration error:", error.message);
 	process.exit(1);
 }
-```
+~~~
 
----
-
-## 25. Error Handling Strategies
-
+-----
+## 25\. Error Handling Strategies
 ### Custom Error Classes
-
-```javascript
+~~~ javascript
 // Base error class
 class AppError extends Error {
 	constructor(message, statusCode = 500, isOperational = true) {
@@ -4647,11 +4430,9 @@ class DatabaseError extends AppError {
 		this.originalError = originalError;
 	}
 }
-```
-
+~~~
 ### Error Handler Middleware
-
-```javascript
+~~~ javascript
 // Express error handler
 function errorHandler(err, req, res, next) {
 	// Log error
@@ -4693,11 +4474,9 @@ function asyncHandler(fn) {
 		Promise.resolve(fn(req, res, next)).catch(next);
 	};
 }
-```
-
+~~~
 ### Circuit Breaker Pattern
-
-```javascript
+~~~ javascript
 class CircuitBreaker {
 	constructor(options = {}) {
 		this.failureThreshold = options.failureThreshold || 5;
@@ -4761,15 +4540,12 @@ async function callExternalAPI() {
 		return await response.json();
 	});
 }
-```
+~~~
 
----
-
-## 26. Monitoring এবং Logging
-
+-----
+## 26\. Monitoring এবং Logging
 ### Winston Logger
-
-```javascript
+~~~ javascript
 const winston = require("winston");
 
 // Logger configuration
@@ -4825,11 +4601,9 @@ function loggerMiddleware(req, res, next) {
 logger.info("Server started", { port: 3000 });
 logger.error("Database connection failed", { error: err.message });
 logger.warn("API rate limit exceeded", { ip: req.ip });
-```
-
+~~~
 ### Application Metrics
-
-```javascript
+~~~ javascript
 const promClient = require("prom-client");
 
 // Create Registry
@@ -4883,15 +4657,12 @@ app.get("/metrics", async (req, res) => {
 	res.set("Content-Type", register.contentType);
 	res.end(await register.metrics());
 });
-```
+~~~
 
----
-
-## 27. Security Best Practices
-
+-----
+## 27\. Security Best Practices
 ### Input Validation and Sanitization
-
-```javascript
+~~~ javascript
 const validator = require("validator");
 
 class InputValidator {
@@ -4939,11 +4710,9 @@ class InputValidator {
 		return url;
 	}
 }
-```
-
+~~~
 ### Rate Limiting
-
-```javascript
+~~~ javascript
 class RateLimiter {
 	constructor(options = {}) {
 		this.windowMs = options.windowMs || 60000;
@@ -5016,11 +4785,9 @@ app.use("/api", limiter.middleware());
 
 // Cleanup old entries periodically
 setInterval(() => limiter.cleanup(), 60000);
-```
-
+~~~
 ### SQL Injection Prevention
-
-```javascript
+~~~ javascript
 // ❌ খারাপ - SQL Injection vulnerable
 function getUserBad(userId) {
 	return db.query(`SELECT * FROM users WHERE id = ${userId}`);
@@ -5035,11 +4802,9 @@ function getUserGood(userId) {
 function getUserKnex(userId) {
 	return db("users").where("id", userId).first();
 }
-```
-
+~~~
 ### XSS Prevention
-
-```javascript
+~~~ javascript
 // Output encoding
 function escapeHTML(str) {
 	return str
@@ -5061,15 +4826,12 @@ app.use((req, res, next) => {
 	);
 	next();
 });
-```
+~~~
 
----
-
-## 28. Single Executable Applications
-
+-----
+## 28\. Single Executable Applications
 ### Creating Standalone Executables
-
-```javascript
+~~~ javascript
 // package.json
 {
   "name": "my-app",
@@ -5114,11 +4876,9 @@ program
  });
 
 program.parse();
-```
-
+~~~
 ### Node.js SEA (Single Executable Application)
-
-```javascript
+~~~ javascript
 // Node 20+ built-in SEA
 // 1. Create your app
 // app.js
@@ -5148,15 +4908,12 @@ chmod +x myapp
 
 // Run
 ./myapp
-```
+~~~
 
----
-
-## 29. WASI (WebAssembly System Interface)
-
+-----
+## 29\. WASI (WebAssembly System Interface)
 ### Using WASI in Node.js
-
-```javascript
+~~~ javascript
 const { WASI } = require("wasi");
 const fs = require("fs");
 
@@ -5175,11 +4932,9 @@ const wasmBuffer = fs.readFileSync("./module.wasm");
 WebAssembly.instantiate(wasmBuffer, wasi.getImportObject()).then((result) => {
 	wasi.start(result.instance);
 });
-```
-
+~~~
 ### Rust to WASM Example
-
-```rust
+~~~ rust
 // lib.rs
 #[no_mangle]
 pub extern "C" fn fibonacci(n: i32) -> i32 {
@@ -5190,9 +4945,8 @@ pub extern "C" fn fibonacci(n: i32) -> i32 {
 }
 
 // Build: cargo build --target wasm32-wasi --release
-```
-
-```javascript
+~~~
+~~~ javascript
 // Using in Node.js
 const { WASI } = require("wasi");
 const fs = require("fs");
@@ -5212,15 +4966,12 @@ async function runWasm() {
 }
 
 runWasm();
-```
+~~~
 
----
-
-## 30. Web Crypto API
-
+-----
+## 30\. Web Crypto API
 ### Encryption and Decryption
-
-```javascript
+~~~ javascript
 const { webcrypto } = require("crypto");
 const { subtle } = webcrypto;
 
@@ -5279,11 +5030,9 @@ async function decrypt(key, encryptedData, iv) {
 	const decrypted = await decrypt(key, encrypted, iv);
 	console.log("Decrypted:", decrypted);
 })();
-```
-
+~~~
 ### Digital Signatures
-
-```javascript
+~~~ javascript
 // Generate key pair
 async function generateKeyPair() {
 	return await subtle.generateKey(
@@ -5338,11 +5087,9 @@ async function verify(publicKey, signature, data) {
 	const isValid = await verify(publicKey, signature, message);
 	console.log("Signature valid:", isValid);
 })();
-```
-
+~~~
 ### Hashing
-
-```javascript
+~~~ javascript
 // SHA-256 hash
 async function hash(data) {
 	const encodedData = new TextEncoder().encode(data);
@@ -5386,15 +5133,11 @@ async function deriveKey(password, salt) {
 	const key = await deriveKey("mypassword", "randomsalt");
 	console.log("Derived key generated");
 })();
-```
-
+~~~
 # Node.js Advanced Interview Questions - Part 2 (Section 22-30)
-
-## 22. Debugger এবং Inspector
-
+## 22\. Debugger এবং Inspector
 ### Built-in Debugger
-
-```javascript
+~~~ javascript
 // Start with: node inspect app.js
 
 function calculate(a, b) {
@@ -5415,11 +5158,9 @@ console.log(result);
 // pause - Pause running code
 // watch('expr') - Watch expression
 // setBreakpoint(), sb() - Set breakpoint
-```
-
+~~~
 ### Inspector Protocol
-
-```javascript
+~~~ javascript
 const inspector = require("inspector");
 const fs = require("fs");
 
@@ -5486,11 +5227,9 @@ async function collectCoverage(fn) {
 		});
 	});
 }
-```
-
+~~~
 ### Remote Debugging
-
-```javascript
+~~~ javascript
 // Start app with: node --inspect=0.0.0.0:9229 app.js
 
 const { promisify } = require("util");
@@ -5536,11 +5275,9 @@ async function debugRemote() {
 		console.log("Debug event:", message);
 	});
 }
-```
-
+~~~
 ### Debug Utilities
-
-```javascript
+~~~ javascript
 // Debug logging with namespaces
 const debug = require("debug");
 
@@ -5592,15 +5329,12 @@ debug.log("Processing request");
 debug.time("query");
 // ... do work
 debug.timeEnd("query");
-```
+~~~
 
----
-
-## 23. Performance Profiling
-
+-----
+## 23\. Performance Profiling
 ### CPU Profiling
-
-```javascript
+~~~ javascript
 const { Session } = require("inspector");
 const fs = require("fs");
 
@@ -5656,11 +5390,9 @@ await profiler.profile(async () => {
 });
 
 // View in Chrome DevTools: chrome://inspect
-```
-
+~~~
 ### Memory Profiling
-
-```javascript
+~~~ javascript
 const v8 = require("v8");
 const fs = require("fs");
 
@@ -5758,11 +5490,9 @@ const leakTest = await MemoryProfiler.detectMemoryLeak(async () => {
 });
 
 console.log("Leak test:", leakTest);
-```
-
+~~~
 ### Benchmarking
-
-```javascript
+~~~ javascript
 const { performance } = require("perf_hooks");
 
 class Benchmark {
@@ -5855,15 +5585,12 @@ async function benchmarkExample() {
 }
 
 benchmarkExample();
-```
+~~~
 
----
-
-## 24. Environment Variables
-
+-----
+## 24\. Environment Variables
 ### Environment Variables Management
-
-```javascript
+~~~ javascript
 // .env file
 /*
 NODE_ENV=production
@@ -5994,15 +5721,12 @@ try {
 	console.error("Configuration error:", error.message);
 	process.exit(1);
 }
-```
+~~~
 
----
-
-## 25. Error Handling Strategies
-
+-----
+## 25\. Error Handling Strategies
 ### Custom Error Classes
-
-```javascript
+~~~ javascript
 // Base error class
 class AppError extends Error {
 	constructor(message, statusCode = 500, isOperational = true) {
@@ -6066,11 +5790,9 @@ class DatabaseError extends AppError {
 		this.originalError = originalError;
 	}
 }
-```
-
+~~~
 ### Error Handler Middleware
-
-```javascript
+~~~ javascript
 // Express error handler
 function errorHandler(err, req, res, next) {
 	// Log error
@@ -6112,11 +5834,9 @@ function asyncHandler(fn) {
 		Promise.resolve(fn(req, res, next)).catch(next);
 	};
 }
-```
-
+~~~
 ### Circuit Breaker Pattern
-
-```javascript
+~~~ javascript
 class CircuitBreaker {
 	constructor(options = {}) {
 		this.failureThreshold = options.failureThreshold || 5;
@@ -6180,15 +5900,12 @@ async function callExternalAPI() {
 		return await response.json();
 	});
 }
-```
+~~~
 
----
-
-## 26. Monitoring এবং Logging
-
+-----
+## 26\. Monitoring এবং Logging
 ### Winston Logger
-
-```javascript
+~~~ javascript
 const winston = require("winston");
 
 // Logger configuration
@@ -6244,11 +5961,9 @@ function loggerMiddleware(req, res, next) {
 logger.info("Server started", { port: 3000 });
 logger.error("Database connection failed", { error: err.message });
 logger.warn("API rate limit exceeded", { ip: req.ip });
-```
-
+~~~
 ### Application Metrics
-
-```javascript
+~~~ javascript
 const promClient = require("prom-client");
 
 // Create Registry
@@ -6302,15 +6017,12 @@ app.get("/metrics", async (req, res) => {
 	res.set("Content-Type", register.contentType);
 	res.end(await register.metrics());
 });
-```
+~~~
 
----
-
-## 27. Security Best Practices
-
+-----
+## 27\. Security Best Practices
 ### Input Validation and Sanitization
-
-```javascript
+~~~ javascript
 const validator = require("validator");
 
 class InputValidator {
@@ -6358,11 +6070,9 @@ class InputValidator {
 		return url;
 	}
 }
-```
-
+~~~
 ### Rate Limiting
-
-```javascript
+~~~ javascript
 class RateLimiter {
 	constructor(options = {}) {
 		this.windowMs = options.windowMs || 60000;
@@ -6435,11 +6145,9 @@ app.use("/api", limiter.middleware());
 
 // Cleanup old entries periodically
 setInterval(() => limiter.cleanup(), 60000);
-```
-
+~~~
 ### SQL Injection Prevention
-
-```javascript
+~~~ javascript
 // ❌ খারাপ - SQL Injection vulnerable
 function getUserBad(userId) {
 	return db.query(`SELECT * FROM users WHERE id = ${userId}`);
@@ -6454,11 +6162,9 @@ function getUserGood(userId) {
 function getUserKnex(userId) {
 	return db("users").where("id", userId).first();
 }
-```
-
+~~~
 ### XSS Prevention
-
-```javascript
+~~~ javascript
 // Output encoding
 function escapeHTML(str) {
 	return str
@@ -6480,15 +6186,12 @@ app.use((req, res, next) => {
 	);
 	next();
 });
-```
+~~~
 
----
-
-## 28. Single Executable Applications
-
+-----
+## 28\. Single Executable Applications
 ### Creating Standalone Executables
-
-```javascript
+~~~ javascript
 // package.json
 {
   "name": "my-app",
@@ -6533,11 +6236,9 @@ program
  });
 
 program.parse();
-```
-
+~~~
 ### Node.js SEA (Single Executable Application)
-
-```javascript
+~~~ javascript
 // Node 20+ built-in SEA
 // 1. Create your app
 // app.js
@@ -6567,15 +6268,12 @@ chmod +x myapp
 
 // Run
 ./myapp
-```
+~~~
 
----
-
-## 29. WASI (WebAssembly System Interface)
-
+-----
+## 29\. WASI (WebAssembly System Interface)
 ### Using WASI in Node.js
-
-```javascript
+~~~ javascript
 const { WASI } = require("wasi");
 const fs = require("fs");
 
@@ -6594,11 +6292,9 @@ const wasmBuffer = fs.readFileSync("./module.wasm");
 WebAssembly.instantiate(wasmBuffer, wasi.getImportObject()).then((result) => {
 	wasi.start(result.instance);
 });
-```
-
+~~~
 ### Rust to WASM Example
-
-```rust
+~~~ rust
 // lib.rs
 #[no_mangle]
 pub extern "C" fn fibonacci(n: i32) -> i32 {
@@ -6609,9 +6305,8 @@ pub extern "C" fn fibonacci(n: i32) -> i32 {
 }
 
 // Build: cargo build --target wasm32-wasi --release
-```
-
-```javascript
+~~~
+~~~ javascript
 // Using in Node.js
 const { WASI } = require("wasi");
 const fs = require("fs");
@@ -6631,15 +6326,12 @@ async function runWasm() {
 }
 
 runWasm();
-```
+~~~
 
----
-
-## 30. Web Crypto API
-
+-----
+## 30\. Web Crypto API
 ### Encryption and Decryption
-
-```javascript
+~~~ javascript
 const { webcrypto } = require("crypto");
 const { subtle } = webcrypto;
 
@@ -6698,11 +6390,9 @@ async function decrypt(key, encryptedData, iv) {
 	const decrypted = await decrypt(key, encrypted, iv);
 	console.log("Decrypted:", decrypted);
 })();
-```
-
+~~~
 ### Digital Signatures
-
-```javascript
+~~~ javascript
 // Generate key pair
 async function generateKeyPair() {
 	return await subtle.generateKey(
@@ -6757,11 +6447,9 @@ async function verify(publicKey, signature, data) {
 	const isValid = await verify(publicKey, signature, message);
 	console.log("Signature valid:", isValid);
 })();
-```
-
+~~~
 ### Hashing
-
-```javascript
+~~~ javascript
 // SHA-256 hash
 async function hash(data) {
 	const encodedData = new TextEncoder().encode(data);
@@ -6805,54 +6493,42 @@ async function deriveKey(password, salt) {
 	const key = await deriveKey("mypassword", "randomsalt");
 	console.log("Derived key generated");
 })();
-```
+~~~
 
----
-
+-----
 ## শেষ কথা
-
 এই সম্পূর্ণ ডকুমেন্টেশনে Node.js এর ৩০টি অ্যাডভান্সড টপিক কভার করা হয়েছে যা ৮+ বছরের অভিজ্ঞতাসম্পন্ন ডেভেলপারদের জন্য গুরুত্বপূর্ণ। প্রতিটি টপিকে রিয়েল-ওয়ার্ল্ড কোড উদাহরণ এবং বেস্ট প্র্যাকটিস অন্তর্ভুক্ত করা হয়েছে।
-
 ### প্রধান টপিক সমূহ
-
 1. **Core Concepts**: Event Loop, V8 Engine, Process Management
-2. **Concurrency**: Worker Threads, Cluster Mode, Child Processes
-3. **I/O**: Streams, File System, Buffer Operations
-4. **Networking**: HTTP/2, WebSocket, TCP/UDP
-5. **Database**: SQLite, Connection Pooling
-6. **Testing**: Test Runner, Mocking, Profiling
-7. **Production**: Error Handling, Monitoring, Security
-8. **Advanced**: SEA, WASI, Web Crypto API
-
+1. **Concurrency**: Worker Threads, Cluster Mode, Child Processes
+1. **I/O**: Streams, File System, Buffer Operations
+1. **Networking**: HTTP/2, WebSocket, TCP/UDP
+1. **Database**: SQLite, Connection Pooling
+1. **Testing**: Test Runner, Mocking, Profiling
+1. **Production**: Error Handling, Monitoring, Security
+1. **Advanced**: SEA, WASI, Web Crypto API
 ### অতিরিক্ত রিসোর্স
-
--   [Node.js Official Documentation](https://nodejs.org/docs/latest/api/)
--   [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
--   [Node.js Design Patterns](https://www.nodejsdesignpatterns.com/)
+- [Node.js Official Documentation](https://nodejs.org/docs/latest/api/)
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
+- [Node.js Design Patterns](https://www.nodejsdesignpatterns.com/)
 
 সফল হোক আপনার ইন্টারভিউ! 🚀
 
----
-
+-----
 ## শেষ কথা
-
 এই সম্পূর্ণ ডকুমেন্টেশনে Node.js এর ৩০টি অ্যাডভান্সড টপিক কভার করা হয়েছে যা ৮+ বছরের অভিজ্ঞতাসম্পন্ন ডেভেলপারদের জন্য গুরুত্বপূর্ণ। প্রতিটি টপিকে রিয়েল-ওয়ার্ল্ড কোড উদাহরণ এবং বেস্ট প্র্যাকটিস অন্তর্ভুক্ত করা হয়েছে।
-
 ### প্রধান টপিক সমূহ
-
 1. **Core Concepts**: Event Loop, V8 Engine, Process Management
-2. **Concurrency**: Worker Threads, Cluster Mode, Child Processes
-3. **I/O**: Streams, File System, Buffer Operations
-4. **Networking**: HTTP/2, WebSocket, TCP/UDP
-5. **Database**: SQLite, Connection Pooling
-6. **Testing**: Test Runner, Mocking, Profiling
-7. **Production**: Error Handling, Monitoring, Security
-8. **Advanced**: SEA, WASI, Web Crypto API
-
+1. **Concurrency**: Worker Threads, Cluster Mode, Child Processes
+1. **I/O**: Streams, File System, Buffer Operations
+1. **Networking**: HTTP/2, WebSocket, TCP/UDP
+1. **Database**: SQLite, Connection Pooling
+1. **Testing**: Test Runner, Mocking, Profiling
+1. **Production**: Error Handling, Monitoring, Security
+1. **Advanced**: SEA, WASI, Web Crypto API
 ### অতিরিক্ত রিসোর্স
-
--   [Node.js Official Documentation](https://nodejs.org/docs/latest/api/)
--   [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
--   [Node.js Design Patterns](https://www.nodejsdesignpatterns.com/)
+- [Node.js Official Documentation](https://nodejs.org/docs/latest/api/)
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
+- [Node.js Design Patterns](https://www.nodejsdesignpatterns.com/)
 
 সফল হোক আপনার ইন্টারভিউ! 🚀
